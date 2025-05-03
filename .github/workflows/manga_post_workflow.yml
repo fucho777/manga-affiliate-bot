@@ -25,7 +25,7 @@ jobs:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 全履歴を取得して確実に前回のデータにアクセスできるようにする
+          fetch-depth: 0 # 全履歴を取得して確実に前回のデータにアクセスできるようにする
           # 明示的にトークンを指定して認証を強化
           token: ${{ github.token }}
 
@@ -37,7 +37,7 @@ jobs:
       - name: Pythonをセットアップ
         uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: 依存関係をインストール
         run: |
@@ -73,7 +73,7 @@ jobs:
         run: |
           # より詳細なデバッグ情報を出力するようにする
           python -u process_manga_data.py
-          
+
           # 結果の確認
           if [ -f "current_post.json" ]; then
             echo "current_post.json was successfully created"
@@ -95,7 +95,7 @@ jobs:
               fi
             fi
           fi
-          
+
           # ファイル一覧を表示して問題を診断
           ls -la *.json
 
@@ -106,12 +106,12 @@ jobs:
             echo "エラー: current_post.jsonが見つかりません。処理を中止します。"
             exit 1
           fi
-          
+
           echo "current_post.jsonの内容:"
           cat current_post.json
-          
+
           python post_to_x.py
-          
+
       # 自動コミット処理の改善
       - name: 変更の確認
         id: check_changes
@@ -124,7 +124,7 @@ jobs:
             echo "変更されたファイルはありません"
             echo "::set-output name=has_changes::false"
           fi
-      
+
       # 変更がある場合のみ実行
       - name: 変更を手動でコミットとプッシュ
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -133,7 +133,7 @@ jobs:
           git add last_processed_index.txt post_history.json x_posting.log current_post.json
           git commit -m "自動投稿: インデックスと履歴を更新 $(date +%Y-%m-%d)"
           git push
-        
+
       # フォールバックとしてのgit-auto-commit-action
       - name: 自動コミット（フォールバック）
         if: steps.check_changes.outputs.has_changes == 'true' && failure()
