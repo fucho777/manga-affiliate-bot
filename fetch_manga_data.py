@@ -1,8 +1,34 @@
 import os
 import json
 import requests
+import sys  # sysモジュールを追加
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+
+
+# 必須環境変数のチェック
+def check_required_env_vars():
+    """必須環境変数が設定されているかチェックし、不足している場合はエラーメッセージを出力して終了"""
+    required_vars = [
+        "DMM_API_ID",
+        "DMM_AFFILIATE_ID",
+    ]
+
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+
+    if missing_vars:
+        print(
+            f"エラー: 以下の必須環境変数が設定されていません: {', '.join(missing_vars)}"
+        )
+        print(
+            "処理を中止します。.envファイルまたはGitHub Secretsで環境変数を設定してください。"
+        )
+        sys.exit(1)
+
+    print("すべての必須環境変数が設定されています。処理を続行します。")
 
 
 def get_available_floors(api_id, affiliate_id):
@@ -52,6 +78,9 @@ def fetch_manga_data():
     # 環境変数の読み込み
     load_dotenv()
 
+    # 必須環境変数のチェックを実行
+    check_required_env_vars()
+
     # APIキーの取得
     api_id = os.getenv("DMM_API_ID")
     affiliate_id = os.getenv("DMM_AFFILIATE_ID")
@@ -61,11 +90,6 @@ def fetch_manga_data():
     print(
         f"デバッグ: アフィリエイトID設定状態: {'設定済み' if affiliate_id else '未設定'}"
     )
-
-    # APIキーが設定されていない場合の処理
-    if not api_id or not affiliate_id:
-        print("エラー: DMM_API_IDまたはDMM_AFFILIATE_IDが環境変数に設定されていません")
-        return False
 
     # 1週間前の日付を計算（新着判定用）
     one_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")

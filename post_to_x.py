@@ -28,15 +28,54 @@ logger = logging.getLogger(__name__)
 # 環境変数を読み込む
 load_dotenv()
 
-# アフィリエイト関連の設定を環境変数から取得（デフォルト値付き）
-AFFILIATE_ID = os.getenv("AFFILIATE_ID", "")
+
+# 必須環境変数のチェック
+def check_required_env_vars():
+    """
+    必須環境変数が設定されているかチェックし、不足している場合はエラーメッセージを出力して終了
+    """
+    required_vars = [
+        "X_API_KEY",
+        "X_API_SECRET",
+        "X_ACCESS_TOKEN",
+        "X_ACCESS_SECRET",
+        "AFFILIATE_ID",
+        "AFFILIATE_SITE",
+        "AFFILIATE_CHANNEL",
+        "AFFILIATE_POST_SITE",
+        "AFFILIATE_POST_CHANNEL",
+        "AFFILIATE_POST_CHANNEL_ID",
+    ]
+
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+
+    if missing_vars:
+        logger.error(
+            f"エラー: 以下の必須環境変数が設定されていません: {', '.join(missing_vars)}"
+        )
+        logger.error(
+            "処理を中止します。.envファイルまたはGitHub Secretsで環境変数を設定してください。"
+        )
+        sys.exit(1)
+
+    logger.info("すべての必須環境変数が設定されています。処理を続行します。")
+
+
+# 環境変数チェックを実行
+check_required_env_vars()
+
+# アフィリエイト関連の設定を環境変数から取得（エラーチェック済みなのでデフォルト値不要）
+AFFILIATE_ID = os.getenv("AFFILIATE_ID")
 # プロセス用とX投稿用のアフィリエイト設定
-AFFILIATE_PROCESS_SITE = os.getenv("AFFILIATE_SITE", "990")  # データ処理用
-AFFILIATE_PROCESS_CHANNEL = os.getenv("AFFILIATE_CHANNEL", "api")  # データ処理用
-AFFILIATE_POST_SITE = os.getenv("AFFILIATE_POST_SITE", "001")  # X投稿用
-AFFILIATE_POST_CHANNEL = os.getenv("AFFILIATE_POST_CHANNEL", "toolbar")  # X投稿用
+AFFILIATE_PROCESS_SITE = os.getenv("AFFILIATE_SITE")  # データ処理用
+AFFILIATE_PROCESS_CHANNEL = os.getenv("AFFILIATE_CHANNEL")  # データ処理用
+AFFILIATE_POST_SITE = os.getenv("AFFILIATE_POST_SITE")  # X投稿用
+AFFILIATE_POST_CHANNEL = os.getenv("AFFILIATE_POST_CHANNEL")  # X投稿用
 AFFILIATE_POST_CHANNEL_ID = os.getenv(
-    "AFFILIATE_POST_CHANNEL_ID", "link"
+    "AFFILIATE_POST_CHANNEL_ID"
 )  # X投稿用チャンネルID
 
 

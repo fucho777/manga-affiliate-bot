@@ -52,6 +52,12 @@ jobs:
           echo "X_ACCESS_SECRET=${{ secrets.X_ACCESS_SECRET }}" >> .env
           echo "DMM_API_ID=${{ secrets.DMM_API_ID }}" >> .env
           echo "DMM_AFFILIATE_ID=${{ secrets.DMM_AFFILIATE_ID }}" >> .env
+          echo "AFFILIATE_ID=${{ secrets.AFFILIATE_ID }}" >> .env
+          echo "AFFILIATE_SITE=${{ secrets.AFFILIATE_SITE }}" >> .env
+          echo "AFFILIATE_CHANNEL=${{ secrets.AFFILIATE_CHANNEL }}" >> .env
+          echo "AFFILIATE_POST_SITE=${{ secrets.AFFILIATE_POST_SITE }}" >> .env
+          echo "AFFILIATE_POST_CHANNEL=${{ secrets.AFFILIATE_POST_CHANNEL }}" >> .env
+          echo "AFFILIATE_POST_CHANNEL_ID=${{ secrets.AFFILIATE_POST_CHANNEL_ID }}" >> .env
           echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
           echo "OPENROUTER_MODEL=${{ secrets.OPENROUTER_MODEL }}" >> .env
           echo "OPENROUTER_SYSTEM_PROMPT=${{ secrets.OPENROUTER_SYSTEM_PROMPT }}" >> .env

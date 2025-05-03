@@ -8,14 +8,54 @@ import time
 import subprocess
 import re  # 正規表現のモジュール
 import urllib.parse  # URLエンコード用のモジュール追加
+import sys  # プログラム終了用にsysモジュール追加
 
 # プログラム開始時に環境変数を読み込み
 load_dotenv()
 
-# アフィリエイト関連の設定を環境変数から取得（デフォルト値付き）
-AFFILIATE_ID = os.getenv("AFFILIATE_ID", "")
-AFFILIATE_SITE = os.getenv("AFFILIATE_SITE", "990")  # デフォルトは990
-AFFILIATE_CHANNEL = os.getenv("AFFILIATE_CHANNEL", "api")  # デフォルトはapi
+
+# 必須環境変数のチェック
+def check_required_env_vars():
+    """
+    必須環境変数が設定されているかチェックし、不足している場合はエラーメッセージを表示して終了
+    """
+    required_vars = [
+        "AFFILIATE_ID",
+        "AFFILIATE_SITE",
+        "AFFILIATE_CHANNEL",
+        "AFFILIATE_POST_SITE",
+        "AFFILIATE_POST_CHANNEL",
+        "AFFILIATE_POST_CHANNEL_ID",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_SYSTEM_PROMPT",
+        "OPENROUTER_USER_PROMPT_TEMPLATE",
+    ]
+
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+
+    if missing_vars:
+        print(
+            f"エラー: 以下の必須環境変数が設定されていません: {', '.join(missing_vars)}"
+        )
+        print(
+            "処理を中止します。.envファイルまたはGitHub Secretsで環境変数を設定してください。"
+        )
+        sys.exit(1)
+
+    print("すべての必須環境変数が設定されています。処理を続行します。")
+
+
+# 環境変数チェックを実行
+check_required_env_vars()
+
+# アフィリエイト関連の設定を環境変数から取得（エラーチェック済みなのでデフォルト値不要）
+AFFILIATE_ID = os.getenv("AFFILIATE_ID")
+AFFILIATE_SITE = os.getenv("AFFILIATE_SITE")
+AFFILIATE_CHANNEL = os.getenv("AFFILIATE_CHANNEL")
 
 
 def update_manga_data():
