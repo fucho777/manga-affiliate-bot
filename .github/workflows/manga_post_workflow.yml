@@ -15,20 +15,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  post-manga:
+  manga_post_job:
     runs-on: ubuntu-latest
-
     steps:
-      - name: リポジトリのチェックアウト
+      - name: リポジトリをチェックアウト
         uses: actions/checkout@v3
 
-      - name: Python 3.9 のセットアップ
-        uses: actions/setup-python@v4
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v3
         with:
-          python-version: "3.9"
-          cache: "pip"
+          python-version: '3.9'
 
-      - name: 依存関係のインストール
+      - name: 依存関係をインストール
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -51,12 +49,20 @@ jobs:
           python fetch_manga_data.py
           python process_manga_data.py
 
-      - name: Twitter投稿
+      - name: current_post.jsonの存在確認
+        run: |
+          if [ ! -f "current_post.json" ]; then
+            echo "エラー: current_post.jsonが見つかりません。処理を中止します。"
+            exit 1
+          fi
+          cat current_post.json | head -10
+
+      - name: Xに投稿
         run: |
           python post_to_x.py
-
-      - name: 投稿履歴とインデックスの保存
+          
+      - name: 変更をコミット
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "自動投稿: インデックスと履歴を更新"
-          file_pattern: "last_processed_index.txt post_history.json current_post.json"
+          commit_message: "自動投稿: インデックスと履歴を更新 $(date +%Y-%m-%d)"
+          file_pattern: "last_processed_index.txt post_history.json x_posting.log current_post.json"
