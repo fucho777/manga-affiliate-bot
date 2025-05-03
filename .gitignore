@@ -5,11 +5,14 @@
 manga_data_raw.json
 sale_manga_data.json
 selected_manga.json
-current_post.json
+# current_post.json - GitHub Actionsでコミットするため除外しない
 
-# ログファイル
-*.log
-x_posting.log
+# ログファイル (x_posting.log以外)
+*_log.log
+*.debug.log
+*.error.log
+*.info.log
+# x_posting.logは除外しない - GitHub Actionsでコミットするため
 
 # キャッシュファイルなど
 __pycache__/
