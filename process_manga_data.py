@@ -735,16 +735,12 @@ def process_manga_data(process_single=True):
                 next_index = 0
                 print(f"すべての投稿を処理しました。インデックスを0にリセットします。")
 
-                # インデックスが0にリセットされる場合、データを更新する
-                print("すべての投稿を処理したため、新しいデータを取得します")
-                update_success = update_manga_data()
-
-                if update_success:
-                    print("データ更新に成功しました。プログラムを再実行します")
-                    # 自分自身を再帰的に呼び出して、新しいデータで処理を行う
-                    return process_manga_data(process_single)
-                else:
-                    print("データ更新に失敗しました。既存のデータで処理を継続します")
+                # インデックスが0にリセットされる場合、データを更新するが、無限ループ防止のためここでは再実行せず終了する
+                print(
+                    "すべての投稿を処理したため、終了します。次回実行時に新しいデータが取得されます。"
+                )
+                save_processed_index(next_index)  # リセットされたインデックスを保存
+                return True  # ここで処理を終了
 
             print(
                 f"投稿 {next_index+1}/{len(result)} を処理します: {result[next_index]['title']}"
