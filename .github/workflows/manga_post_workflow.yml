@@ -77,11 +77,11 @@ jobs:
           # 結果の確認
           if [ -f "current_post.json" ]; then
             echo "current_post.json was successfully created"
-            echo "::set-output name=post_created::true"
+            echo "post_created=true" >> $GITHUB_OUTPUT
             cat current_post.json | head -20
           else
             echo "ERROR: current_post.json was not created!"
-            echo "::set-output name=post_created::false"
+            echo "post_created=false" >> $GITHUB_OUTPUT
             
             # フォールバック処理: 既存のselected_manga.jsonから簡易的なcurrent_post.jsonを生成
             if [ -f "selected_manga.json" ]; then
@@ -90,7 +90,7 @@ jobs:
               
               if [ -f "current_post.json" ]; then
                 echo "Fallback current_post.json created successfully"
-                echo "::set-output name=post_created::true"
+                echo "post_created=true" >> $GITHUB_OUTPUT
                 cat current_post.json
               fi
             fi
@@ -119,10 +119,10 @@ jobs:
           git status --porcelain
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "変更されたファイルが存在します"
-            echo "::set-output name=has_changes::true"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "変更されたファイルはありません"
-            echo "::set-output name=has_changes::false"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
       # 変更がある場合のみ実行
