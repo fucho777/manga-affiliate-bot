@@ -25,6 +25,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 環境変数を読み込む
+load_dotenv()
+
+# アフィリエイト関連の設定を環境変数から取得（デフォルト値付き）
+AFFILIATE_ID = os.getenv("AFFILIATE_ID", "")
+# プロセス用とX投稿用のアフィリエイト設定
+AFFILIATE_PROCESS_SITE = os.getenv("AFFILIATE_SITE", "990")  # データ処理用
+AFFILIATE_PROCESS_CHANNEL = os.getenv("AFFILIATE_CHANNEL", "api")  # データ処理用
+AFFILIATE_POST_SITE = os.getenv("AFFILIATE_POST_SITE", "001")  # X投稿用
+AFFILIATE_POST_CHANNEL = os.getenv("AFFILIATE_POST_CHANNEL", "toolbar")  # X投稿用
+AFFILIATE_POST_CHANNEL_ID = os.getenv(
+    "AFFILIATE_POST_CHANNEL_ID", "link"
+)  # X投稿用チャンネルID
+
 
 def load_post_data():
     """
@@ -107,11 +121,11 @@ def add_variation_to_text(text):
     # 現在時刻を取得
     now = datetime.now()
     time_str = now.strftime("%H:%M")
-    
+
     # ランダムな絵文字を選択
     emojis = ["🔥", "✨", "💯", "👀", "📚", "🎮", "📲", "🌟", "💫", "🆕"]
     rand_emoji = random.choice(emojis)
-    
+
     # ランダムなフレーズを選択
     phrases = [
         f"【{time_str}更新】",
@@ -121,11 +135,11 @@ def add_variation_to_text(text):
         f"【{rand_emoji}話題の作品】",
         f"{rand_emoji}いま読むべき！",
         f"{rand_emoji}チェックしてみて",
-        f"【{rand_emoji}{now.strftime('%m/%d')}】"
+        f"【{rand_emoji}{now.strftime('%m/%d')}】",
     ]
-    
+
     variation = random.choice(phrases)
-    
+
     # テキストの先頭にバリエーションを追加
     # ただし、すでに【】で始まっている場合は置き換える
     if text.startswith("【"):
@@ -137,7 +151,7 @@ def add_variation_to_text(text):
             text = variation + " " + text
     else:
         text = variation + " " + text
-        
+
     return text
 
 
@@ -146,7 +160,9 @@ def is_duplicate_content_error(e):
     エラーが重複コンテンツによるものかを判定
     """
     error_text = str(e).lower()
-    return ("403" in error_text or "forbidden" in error_text) and "duplicate content" in error_text
+    return (
+        "403" in error_text or "forbidden" in error_text
+    ) and "duplicate content" in error_text
 
 
 def post_to_twitter(post_data, twitter_client, retry_count=0):
@@ -168,12 +184,24 @@ def post_to_twitter(post_data, twitter_client, retry_count=0):
         affiliate_url = post_data.get("affiliateURL", "")
 
         # URLパラメータの置換処理
-        if affiliate_url and "kntbouzu777-990&ch=api" in affiliate_url:
-            # 990&ch=api を 001&ch=toolbar&ch_id=link に置換
-            affiliate_url = affiliate_url.replace(
-                "kntbouzu777-990&ch=api", "kntbouzu777-001&ch=toolbar&ch_id=link"
-            )
-            logger.info("アフィリエイトURLのパラメータを置換しました")
+        if affiliate_url and AFFILIATE_ID:
+            # データ処理用のパラメータをX投稿用のパラメータに置換
+            process_params = f"{AFFILIATE_ID}-{AFFILIATE_PROCESS_SITE}&ch={AFFILIATE_PROCESS_CHANNEL}"
+            post_params = f"{AFFILIATE_ID}-{AFFILIATE_POST_SITE}&ch={AFFILIATE_POST_CHANNEL}&ch_id={AFFILIATE_POST_CHANNEL_ID}"
+
+            # 古いパラメータも互換性のために処理
+            old_process_params = f"kntbouzu777-990&ch=api"
+
+            if process_params in affiliate_url:
+                affiliate_url = affiliate_url.replace(process_params, post_params)
+                logger.info(
+                    "アフィリエイトURLのパラメータを置換しました（環境変数使用）"
+                )
+            elif old_process_params in affiliate_url:
+                affiliate_url = affiliate_url.replace(old_process_params, post_params)
+                logger.info(
+                    "アフィリエイトURLのパラメータを置換しました（旧形式から変換）"
+                )
 
         if not post_text:
             logger.error("投稿テキストがありません。")
@@ -182,7 +210,9 @@ def post_to_twitter(post_data, twitter_client, retry_count=0):
         # リトライの場合はテキストにバリエーションを追加
         if retry_count > 0:
             post_text = add_variation_to_text(post_text)
-            logger.info(f"重複エラー回避のため投稿テキストを変更しました（リトライ{retry_count}回目）")
+            logger.info(
+                f"重複エラー回避のため投稿テキストを変更しました（リトライ{retry_count}回目）"
+            )
 
         # URLがすでにテキストに含まれている場合は削除（二重投稿防止）
         post_text = re.sub(r"https?://[^\s]+", "", post_text).strip()
@@ -215,12 +245,14 @@ def post_to_twitter(post_data, twitter_client, retry_count=0):
             else:
                 logger.error("投稿に失敗しました。レスポンスデータがありません。")
                 return False
-                
+
         except Exception as e:
             # 重複コンテンツエラーの場合、最大3回までリトライ
             if is_duplicate_content_error(e) and retry_count < 3:
                 logger.warning(f"重複コンテンツエラーが発生しました: {e}")
-                logger.info(f"投稿テキストにバリエーションを追加して再試行します（{retry_count+1}/3）")
+                logger.info(
+                    f"投稿テキストにバリエーションを追加して再試行します（{retry_count+1}/3）"
+                )
                 # 少し待機してから再試行
                 time.sleep(2)
                 return post_to_twitter(post_data, twitter_client, retry_count + 1)
@@ -231,6 +263,7 @@ def post_to_twitter(post_data, twitter_client, retry_count=0):
     except Exception as e:
         logger.error(f"投稿処理でエラーが発生しました: {e}")
         import traceback
+
         logger.error(traceback.format_exc())
         return False
 
@@ -254,7 +287,8 @@ def save_post_history(post_data, tweet_id, actual_post_text=None):
         # 投稿履歴を追加
         history_entry = {
             "title": post_data["title"],
-            "post_text": actual_post_text or post_data["post_text"],  # 実際に投稿したテキストを保存
+            "post_text": actual_post_text
+            or post_data["post_text"],  # 実際に投稿したテキストを保存
             "tweet_id": tweet_id,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
@@ -279,24 +313,28 @@ def check_post_history(title):
         history_file = "post_history.json"
         if not os.path.exists(history_file):
             return False
-            
+
         with open(history_file, "r", encoding="utf-8") as f:
             history = json.load(f)
-            
+
         # 過去7日以内に同じタイトルの投稿があるかをチェック
         now = datetime.now()
         seven_days_ago = now.timestamp() - (7 * 24 * 60 * 60)
-        
+
         for entry in history:
             if entry["title"] == title:
                 try:
-                    post_time = datetime.strptime(entry["timestamp"], "%Y-%m-%d %H:%M:%S")
+                    post_time = datetime.strptime(
+                        entry["timestamp"], "%Y-%m-%d %H:%M:%S"
+                    )
                     if post_time.timestamp() > seven_days_ago:
-                        logger.warning(f"過去7日以内に同じタイトルの投稿があります: {title}")
+                        logger.warning(
+                            f"過去7日以内に同じタイトルの投稿があります: {title}"
+                        )
                         return True
                 except:
                     pass
-                    
+
         return False
     except Exception as e:
         logger.error(f"投稿履歴のチェックに失敗しました: {e}")
@@ -314,7 +352,7 @@ def main():
     if not post_data:
         logger.error("投稿データの読み込みに失敗しました")
         return False
-        
+
     # 過去7日以内に同じタイトルの投稿があるかチェック
     title = post_data.get("title", "")
     if title and check_post_history(title):

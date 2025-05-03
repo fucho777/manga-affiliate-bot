@@ -9,6 +9,14 @@ import subprocess
 import re  # 正規表現のモジュール
 import urllib.parse  # URLエンコード用のモジュール追加
 
+# プログラム開始時に環境変数を読み込み
+load_dotenv()
+
+# アフィリエイト関連の設定を環境変数から取得（デフォルト値付き）
+AFFILIATE_ID = os.getenv("AFFILIATE_ID", "")
+AFFILIATE_SITE = os.getenv("AFFILIATE_SITE", "990")  # デフォルトは990
+AFFILIATE_CHANNEL = os.getenv("AFFILIATE_CHANNEL", "api")  # デフォルトはapi
+
 
 def update_manga_data():
     """
@@ -36,7 +44,8 @@ def rewrite_text_with_ai(original_text):
     """
     オープンルーターAPIを使用して投稿テキストをリライトする
     """
-    load_dotenv()  # 環境変数を読み込む
+    # 環境変数は既にプログラム開始時に読み込み済みのため、ここでは不要
+    # load_dotenv()
 
     # APIキーを環境変数から取得
     api_key = os.getenv("OPENROUTER_API_KEY")
@@ -97,10 +106,35 @@ def rewrite_text_with_ai(original_text):
         # リクエスト送信
         response = requests.post(url, headers=headers, json=data)
 
+        # デバッグ情報として生のレスポンスを出力
+        print(f"API レスポンスステータス: {response.status_code}")
+        print(f"API レスポンス内容: {response.text[:500]}...")
+
         # レスポンスを処理
         if response.status_code == 200:
             response_data = response.json()
-            raw_text = response_data["choices"][0]["message"]["content"].strip()
+
+            # レスポンス構造のデバッグ
+            print(f"レスポンスのキー: {list(response_data.keys())}")
+
+            # 応答データ構造の確認と処理
+            if "choices" in response_data and response_data["choices"]:
+                # 従来の形式
+                raw_text = response_data["choices"][0]["message"]["content"].strip()
+            elif "data" in response_data and response_data["data"]:
+                # 代替の形式1
+                raw_text = response_data["data"][0]["content"].strip()
+            elif "response" in response_data:
+                # 代替の形式2
+                raw_text = response_data["response"].strip()
+            else:
+                # レスポンス形式が判断できない場合
+                print("API レスポンスの構造が変更されています。完全なレスポンス:")
+                print(json.dumps(response_data, indent=2, ensure_ascii=False))
+
+                # エラーではなく、フォールバックテキストを使用する
+                print("レスポンス形式が不明なため、フォールバックテキストを使用します")
+                return extract_rewritten_text("", original_text)
 
             # デバッグ出力
             print("AIのレスポンス（処理前）:")
@@ -120,16 +154,25 @@ def rewrite_text_with_ai(original_text):
             # レート制限を回避するための待機
             time.sleep(1)
             return rewritten_text
+        elif response.status_code == 429:
+            # クォータ超過エラー
+            print(
+                "APIクォータ超過エラー（429）が発生しました。フォールバックテキストを使用します。"
+            )
+            return extract_rewritten_text("", original_text)
         else:
             error_msg = f"APIエラー: {response.status_code} - {response.text}"
             print(error_msg)
-            # APIエラー時は処理を中止する
-            raise ValueError(error_msg)
+            # APIエラー時もフォールバックテキストを使用する
+            print("APIエラーのため、フォールバックテキストを使用します")
+            return extract_rewritten_text("", original_text)
 
     except Exception as e:
         error_msg = f"リライト処理エラー: {e}"
         print(error_msg)
-        raise ValueError(error_msg)
+        # 例外発生時もフォールバックテキストを使用する
+        print("例外発生のため、フォールバックテキストを使用します")
+        return extract_rewritten_text("", original_text)
 
 
 def extract_rewritten_text(text, original_text=None):
@@ -579,7 +622,7 @@ def process_manga_data(process_single=True):
         # 選定結果をJSONで保存
         result = []
         for _, row in selected_manga.iterrows():
-            # アフィリエイトURLを構築（API経由の場合は990を使用）
+            # アフィリエイトURLを構築
             original_url = row.get("affiliateURL", "") or row.get("URL", "")
 
             # URLがある場合、パラメータを修正
@@ -598,21 +641,31 @@ def process_manga_data(process_single=True):
                             lurl = part
                             break
 
-                # 新しいURLを構築（API経由なので990を使用）
-                if lurl:
-                    fixed_url = f"{base_url}?{lurl}&af_id=kntbouzu777-990&ch=api"
+                # アフィリエイトIDが設定されているかチェック
+                if not AFFILIATE_ID:
+                    print(
+                        "警告: 環境変数AFFILIATE_IDが設定されていません。アフィリエイトリンクが作成できません。"
+                    )
+                    fixed_url = original_url
                 else:
-                    # lurlが見つからない場合は元のURLにパラメータを付ける
-                    fixed_url = f"{original_url}"
-                    if "?" in fixed_url:
-                        fixed_url = (
-                            fixed_url.split("?")[0]
-                            + "?lurl="
-                            + urllib.parse.quote(fixed_url.split("?")[1])
-                            + "&af_id=kntbouzu777-990&ch=api"
-                        )
+                    # 新しいURLを構築
+                    if lurl:
+                        fixed_url = f"{base_url}?{lurl}&af_id={AFFILIATE_ID}-{AFFILIATE_SITE}&ch={AFFILIATE_CHANNEL}"
                     else:
-                        fixed_url = fixed_url + "?af_id=kntbouzu777-990&ch=api"
+                        # lurlが見つからない場合は元のURLにパラメータを付ける
+                        fixed_url = f"{original_url}"
+                        if "?" in fixed_url:
+                            fixed_url = (
+                                fixed_url.split("?")[0]
+                                + "?lurl="
+                                + urllib.parse.quote(fixed_url.split("?")[1])
+                                + f"&af_id={AFFILIATE_ID}-{AFFILIATE_SITE}&ch={AFFILIATE_CHANNEL}"
+                            )
+                        else:
+                            fixed_url = (
+                                fixed_url
+                                + f"?af_id={AFFILIATE_ID}-{AFFILIATE_SITE}&ch={AFFILIATE_CHANNEL}"
+                            )
             else:
                 fixed_url = ""
 

@@ -3,8 +3,23 @@
 
 import json
 import os
-import re
+import sys
 from dotenv import load_dotenv
+import urllib.parse
+
+# 環境変数を読み込む
+load_dotenv()
+
+# アフィリエイト関連の設定を環境変数から取得（デフォルト値付き）
+AFFILIATE_ID = os.getenv("AFFILIATE_ID", "")
+# プロセス用とX投稿用のアフィリエイト設定
+AFFILIATE_PROCESS_SITE = os.getenv("AFFILIATE_SITE", "990")  # データ処理用
+AFFILIATE_PROCESS_CHANNEL = os.getenv("AFFILIATE_CHANNEL", "api")  # データ処理用
+AFFILIATE_POST_SITE = os.getenv("AFFILIATE_POST_SITE", "001")  # X投稿用
+AFFILIATE_POST_CHANNEL = os.getenv("AFFILIATE_POST_CHANNEL", "toolbar")  # X投稿用
+AFFILIATE_POST_CHANNEL_ID = os.getenv(
+    "AFFILIATE_POST_CHANNEL_ID", "link"
+)  # X投稿用チャンネルID
 
 
 def load_post_data():
@@ -20,89 +35,86 @@ def load_post_data():
         return None
 
 
-def preview_post_text(post_data):
+def preview_post():
     """
-    投稿テキストをプレビューする
+    投稿内容をプレビューする
     """
-    if not post_data:
-        print("投稿データがありません。")
-        return False
-
-    # 投稿テキスト準備
-    post_text = post_data.get("post_text", "").strip()
-
-    # アフィリエイトURL
-    affiliate_url = post_data.get("affiliateURL", "")
-
-    # URLパラメータの置換処理
-    if affiliate_url and "kntbouzu777-990&ch=api" in affiliate_url:
-        # 990&ch=api を 001&ch=toolbar&ch_id=link に置換
-        affiliate_url = affiliate_url.replace(
-            "kntbouzu777-990&ch=api", "kntbouzu777-001&ch=toolbar&ch_id=link"
-        )
-        print("アフィリエイトURLのパラメータを置換しました")
-
-    if not post_text:
-        print("投稿テキストがありません。")
-        return False
-
-    # URLがすでにテキストに含まれている場合は削除（二重投稿防止）
-    post_text = re.sub(r"https?://[^\s]+", "", post_text).strip()
-
-    # 連続した改行を整理
-    post_text = re.sub(r"\n{3,}", "\n\n", post_text)
-
-    # アフィリエイトURLを末尾に追加
-    if affiliate_url:
-        # 投稿テキストにURLを追加
-        if post_text.endswith("#PR"):
-            # #PRタグの後に改行を入れてアフィリエイトURLを追加
-            post_text = post_text + "\n" + affiliate_url
-        else:
-            # 末尾に改行とアフィリエイトURLを追加
-            post_text = post_text + "\n\n" + affiliate_url
-
-    # タイトル情報
-    title = post_data.get("title", "")
-    if title:
-        print(f"【タイトル】\n{title}\n")
-
-    # 画像情報
-    if "imageURL" in post_data and post_data["imageURL"]:
-        if isinstance(post_data["imageURL"], dict):
-            for size, url in post_data["imageURL"].items():
-                print(f"【画像({size})】\n{url}\n")
-                break
-        else:
-            print(f"【画像】\n{post_data['imageURL']}\n")
-
-    # 投稿プレビューを表示
-    print("【投稿プレビュー】")
-    print("=" * 50)
-    print(post_text)
-    print("=" * 50)
-
-    # 文字数カウント
-    print(f"\n文字数: {len(post_text)}")
-
-    return True
-
-
-def main():
-    """
-    メイン処理
-    """
-    print("X（Twitter）投稿内容のプレビューを表示します")
-
     # 投稿データを読み込む
     post_data = load_post_data()
     if not post_data:
         print("投稿データの読み込みに失敗しました")
         return False
 
-    # 投稿テキストをプレビュー
-    preview_post_text(post_data)
+    # データを表示
+    print("\n===== 投稿データ =====")
+    print(f"タイトル: {post_data.get('title', '未設定')}")
+    if "author" in post_data:
+        print(f"作者: {post_data.get('author', '不明')}")
+
+    print("\n----- 元のアフィリエイトURL -----")
+    affiliate_url = post_data.get("affiliateURL", "")
+    print(affiliate_url)
+
+    # URLパラメータの置換処理
+    if affiliate_url and AFFILIATE_ID:
+        # データ処理用のパラメータをX投稿用のパラメータに置換
+        process_params = (
+            f"{AFFILIATE_ID}-{AFFILIATE_PROCESS_SITE}&ch={AFFILIATE_PROCESS_CHANNEL}"
+        )
+        post_params = f"{AFFILIATE_ID}-{AFFILIATE_POST_SITE}&ch={AFFILIATE_POST_CHANNEL}&ch_id={AFFILIATE_POST_CHANNEL_ID}"
+
+        # 古いパラメータも互換性のために処理
+        old_process_params = f"kntbouzu777-990&ch=api"
+
+        if process_params in affiliate_url:
+            new_url = affiliate_url.replace(process_params, post_params)
+            print("\n----- X投稿用に変換されたURL（環境変数使用） -----")
+            print(new_url)
+            print(f"\nパラメータ変更: {process_params} → {post_params}")
+        elif old_process_params in affiliate_url:
+            new_url = affiliate_url.replace(old_process_params, post_params)
+            print("\n----- X投稿用に変換されたURL（旧形式から変換） -----")
+            print(new_url)
+            print(f"\nパラメータ変更: {old_process_params} → {post_params}")
+        else:
+            print(
+                "\n※ URLパラメータの置換は行われませんでした（パターンが一致しません）"
+            )
+    else:
+        print("\n※ アフィリエイトURLが見つからないか、AFFILIATE_IDが設定されていません")
+
+    # 投稿テキスト準備
+    post_text = post_data.get("post_text", "").strip()
+
+    # 投稿プレビュー
+    print("\n===== 投稿テキストプレビュー =====")
+    print(post_text)
+
+    # URLを含めた最終的な投稿
+    print("\n===== 最終投稿プレビュー =====")
+
+    # URLがすでにテキストに含まれている場合は削除（二重投稿防止）
+    cleaned_text = post_text.strip()
+
+    # アフィリエイトURLを末尾に追加
+    if affiliate_url:
+        # 投稿テキストにURLを追加（改行で区切る）
+        if cleaned_text.endswith("#PR"):
+            # #PRタグの後に改行を入れてアフィリエイトURLを追加
+            final_text = cleaned_text + "\n" + new_url
+        else:
+            # 末尾に改行とアフィリエイトURLを追加
+            final_text = cleaned_text + "\n\n" + new_url
+
+        print(final_text)
+        print(f"\n文字数: {len(final_text)}文字")
+    else:
+        print(cleaned_text)
+        print(f"\n文字数: {len(cleaned_text)}文字")
+
+    return True
 
 
 if __name__ == "__main__":
-    main()
+    print("X（Twitter）への投稿プレビューを表示します（実際の投稿は行いません）")
+    preview_post()
