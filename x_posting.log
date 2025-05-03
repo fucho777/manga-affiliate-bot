@@ -152,3 +152,6 @@ https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6112294%2Fk1
 https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F594112%2Fb866afgwi01845%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-05-03 13:41:34,350 - INFO - 投稿履歴を保存しました
 2025-05-03 13:41:34,351 - INFO - 投稿処理が完了しました
+2025-05-03 14:08:34,810 - INFO - X（Twitter）への投稿処理を開始します
+2025-05-03 14:08:34,811 - WARNING - 過去7日以内に同じタイトルの投稿があります: アナンガ・ランガ Vol.119
+2025-05-03 14:08:34,812 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
