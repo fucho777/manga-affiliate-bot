@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 全履歴を取得して確実に前回のデータにアクセスできるようにする
 
       - name: Pythonをセットアップ
         uses: actions/setup-python@v3
@@ -43,22 +45,60 @@ jobs:
           echo "OPENROUTER_MODEL=${{ secrets.OPENROUTER_MODEL }}" >> .env
           echo "OPENROUTER_SYSTEM_PROMPT=${{ secrets.OPENROUTER_SYSTEM_PROMPT }}" >> .env
           echo "OPENROUTER_USER_PROMPT_TEMPLATE=${{ secrets.OPENROUTER_USER_PROMPT_TEMPLATE }}" >> .env
+          cat .env | grep -v "KEY\|SECRET\|TOKEN" # 機密情報以外の環境変数を表示
 
-      - name: マンガデータの取得と処理
+      - name: ワーキングディレクトリの確認
+        run: |
+          pwd
+          ls -la
+
+      - name: mangaデータの取得
         run: |
           python fetch_manga_data.py
-          python process_manga_data.py
+          ls -la manga_data_raw.json || echo "manga_data_raw.json not found"
 
-      - name: current_post.jsonの存在確認
+      - name: mangaデータの処理
+        id: process_data
+        run: |
+          # より詳細なデバッグ情報を出力するようにする
+          python -u process_manga_data.py
+          
+          # 結果の確認
+          if [ -f "current_post.json" ]; then
+            echo "current_post.json was successfully created"
+            echo "::set-output name=post_created::true"
+            cat current_post.json | head -20
+          else
+            echo "ERROR: current_post.json was not created!"
+            echo "::set-output name=post_created::false"
+            
+            # フォールバック処理: 既存のselected_manga.jsonから簡易的なcurrent_post.jsonを生成
+            if [ -f "selected_manga.json" ]; then
+              echo "Creating fallback current_post.json from selected_manga.json"
+              python -c "import json; data = json.load(open('selected_manga.json')); json.dump(data[0], open('current_post.json', 'w'), indent=2)" || echo "Failed to create fallback"
+              
+              if [ -f "current_post.json" ]; then
+                echo "Fallback current_post.json created successfully"
+                echo "::set-output name=post_created::true"
+                cat current_post.json
+              fi
+            fi
+          fi
+          
+          # ファイル一覧を表示して問題を診断
+          ls -la *.json
+
+      - name: Xに投稿
+        if: steps.process_data.outputs.post_created == 'true'
         run: |
           if [ ! -f "current_post.json" ]; then
             echo "エラー: current_post.jsonが見つかりません。処理を中止します。"
             exit 1
           fi
-          cat current_post.json | head -10
-
-      - name: Xに投稿
-        run: |
+          
+          echo "current_post.jsonの内容:"
+          cat current_post.json
+          
           python post_to_x.py
           
       - name: 変更をコミット
