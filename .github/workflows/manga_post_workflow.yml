@@ -1,0 +1,62 @@
+name: マンガ情報自動投稿
+
+on:
+  schedule:
+    # UTC時間で設定（日本時間より9時間遅れ）
+    # アダルトコンテンツに最適化した時間帯設定
+    - cron: "30 3 * * 1-5" # 平日昼休み: UTC 3:30 (JST 12:30)
+    - cron: "0 12 * * 1-5" # 平日夜: UTC 12:00 (JST 21:00)
+    - cron: "30 14 * * 1-5" # 平日深夜: UTC 14:30 (JST 23:30)
+    - cron: "0 15 * * 6,0" # 週末深夜: UTC 15:00 (JST 翌0:00)
+    - cron: "0 17 * * 6,0" # 週末深夜2: UTC 17:00 (JST 翌2:00)
+    - cron: "30 10 * * 6,0" # 週末夕方: UTC 10:30 (JST 19:30)
+
+  # 手動実行のためのトリガー
+  workflow_dispatch:
+
+jobs:
+  post-manga:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v3
+
+      - name: Python 3.9 のセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: "pip"
+
+      - name: 依存関係のインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 環境変数の設定
+        run: |
+          echo "X_API_KEY=${{ secrets.X_API_KEY }}" >> .env
+          echo "X_API_SECRET=${{ secrets.X_API_SECRET }}" >> .env
+          echo "X_ACCESS_TOKEN=${{ secrets.X_ACCESS_TOKEN }}" >> .env
+          echo "X_ACCESS_SECRET=${{ secrets.X_ACCESS_SECRET }}" >> .env
+          echo "DMM_API_ID=${{ secrets.DMM_API_ID }}" >> .env
+          echo "DMM_AFFILIATE_ID=${{ secrets.DMM_AFFILIATE_ID }}" >> .env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+          echo "OPENROUTER_MODEL=${{ secrets.OPENROUTER_MODEL }}" >> .env
+          echo "OPENROUTER_SYSTEM_PROMPT=${{ secrets.OPENROUTER_SYSTEM_PROMPT }}" >> .env
+          echo "OPENROUTER_USER_PROMPT_TEMPLATE=${{ secrets.OPENROUTER_USER_PROMPT_TEMPLATE }}" >> .env
+
+      - name: マンガデータの取得と処理
+        run: |
+          python fetch_manga_data.py
+          python process_manga_data.py
+
+      - name: Twitter投稿
+        run: |
+          python post_to_x.py
+
+      - name: 投稿履歴とインデックスの保存
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "自動投稿: インデックスと履歴を更新"
+          file_pattern: "last_processed_index.txt post_history.json current_post.json"
