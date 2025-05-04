@@ -241,6 +241,18 @@ def extract_rewritten_text(text, original_text=None):
     # コード部分やマークダウンブロックを除去
     text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
 
+    # 金額に関する表現を削除（例：100円、1,000円、¥500など）
+    text = re.sub(r'\d{1,3}(,\d{3})*円', '', text)
+    text = re.sub(r'¥\d{1,3}(,\d{3})*', '', text)
+    text = re.sub(r'\d+(円|万円|千円)', '', text)
+    
+    # 金額を含む文章パターンを削除（「〜円で」などの表現）
+    text = re.sub(r'[\d,.]+円[でにはが]', '', text)
+    text = re.sub(r'コスパ[がは]?[良最高]', '', text)
+    
+    # 価格に関連する表現を削除
+    text = re.sub(r'(お買い得|格安|安い|高い|値段|料金|価格)', '', text)
+
     # ハッシュタグ候補を用意
     hashtag_candidates = [
         "#官能",
@@ -326,93 +338,25 @@ def extract_rewritten_text(text, original_text=None):
         else:
             selected_hashtag = random.choice(hashtag_candidates)
 
-    # カジュアル表現の検出（優先的に使用するため）
-    casual_expressions = []
-    casual_patterns = [
-        r"([^。\n]*?(羨ましすぎ|背徳感|ヤバい|ヤバすぎ|たまんない|興奮する|止まらない|最高|激アツ)[^。\n]*?)[。！？\n]",
-        r"([^。\n]*?(俺|私|自分)[^。\n]*?(興奮|ドキドキ|ゾクゾク|たまらない|好き|最高)[^。\n]*?)[。！？\n]",
-        r"([^。\n]*?[😍😳🔥💦❤️][^。\n]*?)[。！？\n]",
-    ]
-
-    for pattern in casual_patterns:
-        matches = re.findall(pattern, text)
-        if matches:
-            casual_expressions.extend([match[0] for match in matches])
-
-    # 1. 強い感情表現と一人称を含む短めの文を探す
-    short_expressions = []
-
-    lines = text.split("\n")
-    for line in lines:
-        # 明らかな解説や指示文は除外
-        if re.match(r"^(例:|例：|こんな感じ|以下のような|ツイート例|投稿例)", line):
+    # AIのテキストから投稿用の文章を選択するロジック
+    # 明示的な指示や例の部分を取り除く
+    filtered_text = re.sub(r"^(例:|例：|ツイート例|投稿例|以下のような).*$", "", text, flags=re.MULTILINE)
+    
+    # 日本語テキスト部分を抽出
+    japanese_lines = []
+    for line in filtered_text.split("\n"):
+        # 空行やマークダウン記号のみの行をスキップ
+        if not line.strip() or line.strip() in ["---", "***", "___"]:
             continue
-
+        # 明らかな解説や指示は除外
+        if re.match(r"^(これは|ここで|このツイート|この投稿|解説：)", line):
+            continue
         # 日本語を含む行を抽出
         if re.search(r"[ぁ-んァ-ン一-龥]", line):
-            # 文章を短くするため、「。」「！」「？」で分割
-            sentences = re.split(r"[。！？]", line)
-            for sentence in sentences:
-                if not sentence.strip():
-                    continue
-
-                # 長さが60文字以下で、カジュアル要素があるものを抽出
-                if len(sentence) <= 60:
-                    casual_score = 0
-                    if re.search(r"(俺|私|自分)", sentence):
-                        casual_score += 5  # 一人称重視
-                    if re.search(
-                        r"(ヤバい|すごい|最高|興奮|羨ましい|背徳感)", sentence
-                    ):
-                        casual_score += 4  # 感情表現重視
-                    if re.search(r"[…！？]", sentence):
-                        casual_score += 2
-                    if re.search(r"[😍😳🔥💦❤️]", sentence):
-                        casual_score += 2
-
-                    # スコアが一定以上ならリストに追加
-                    if casual_score >= 2:
-                        short_expressions.append((sentence.strip(), casual_score))
-
-    # 最終テキストの準備
-    final_text = ""
-
-    # 一人称や感情表現を含む短めのテキストを優先
-    if casual_expressions:
-        # 長さが60文字以下のものを優先
-        filtered_expressions = [
-            (expr, len(expr)) for expr in casual_expressions if len(expr) <= 60
-        ]
-        if filtered_expressions:
-            best_casual = min(filtered_expressions, key=lambda x: x[1])[
-                0
-            ]  # 短いものを選択
-            final_text = best_casual
-        else:
-            # 長すぎる場合は適当に切る
-            best_casual = casual_expressions[0]
-            if len(best_casual) > 60:
-                # 最初の60文字を取得し、切れ目を調整
-                cut_text = best_casual[:60]
-                # 最後の文字が途中で切れないように調整
-                if re.search(r"[ぁ-んァ-ン一-龥]$", cut_text):
-                    # 最後の文字が日本語なら、その文字を含む単語全体を探す
-                    for i in range(len(cut_text) - 1, 0, -1):
-                        if not re.search(r"[ぁ-んァ-ン一-龥]", cut_text[i - 1]):
-                            cut_text = cut_text[:i]
-                            break
-                final_text = cut_text + "…"
-            else:
-                final_text = best_casual
-
-    # 短い表現リストからも検索
-    elif short_expressions:
-        # カジュアルスコアで並べ替え
-        short_expressions.sort(key=lambda x: x[1], reverse=True)
-        final_text = short_expressions[0][0]  # 最もカジュアルな短文を選択
-
-    # いずれも見つからない場合のフォールバック
-    if not final_text:
+            japanese_lines.append(line.strip())
+    
+    # 日本語テキストが見つからなかった場合のフォールバック
+    if not japanese_lines:
         fallback_texts = [
             "これマジでヤバい内容…見た瞬間興奮が止まらない😳",
             "背徳感すごいのに目が離せない…こんなの反則だろ🔥",
@@ -422,20 +366,22 @@ def extract_rewritten_text(text, original_text=None):
             "これ見た瞬間に我慢できなくなって即買いしたわw🔥",
             "急にこんなシチュエーションになるとか反則すぎる…💦",
         ]
-        final_text = random.choice(fallback_texts)
-
-    # 最終的な文章調整
-    final_text = final_text.strip()
-
-    # 一人称がなければ追加を検討
-    if not re.search(r"(俺|私|自分)", final_text):
-        first_person_prefixes = ["私これ", "俺これ", "自分的には", "私的に", "俺的に"]
-        if len(final_text) <= 50 and not final_text.startswith("これ"):
-            final_text = random.choice(first_person_prefixes) + final_text
-
-    # 末尾に感情表現がなければ追加
-    if not re.search(r"[！？…w]$", final_text):
-        final_text += "…！"
+        final_text = random.choice(fallback_texts) + "…！"
+    else:
+        # 変更点: カジュアルさを優先しつつも、テキストがより残るようにする
+        # 一旦全ての日本語テキストを連結（最大3行まで）
+        main_text = " ".join(japanese_lines[:3])
+        
+        # 長すぎる場合は調整（最大120文字）- 以前の60文字から拡大
+        if len(main_text) > 120:
+            main_text = main_text[:120] + "…"
+        
+        # 最終的に金額情報が含まれていないか再チェック
+        main_text = re.sub(r'\d{1,3}(,\d{3})*円', '', main_text)
+        main_text = re.sub(r'¥\d{1,3}(,\d{3})*', '', main_text)
+        main_text = re.sub(r'[\d,.]+円[でにはが]', '', main_text)
+        
+        final_text = main_text
 
     # 絵文字がなければ追加
     if not re.search(r"[😍😳🔥💦❤️]", final_text):
