@@ -1509,3 +1509,13 @@ https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F4411770%2Fb9
 https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6150363%2Fs734amlke00218%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-06-24 12:21:01,720 - INFO - 投稿履歴を保存しました
 2025-06-24 12:21:01,721 - INFO - 投稿処理が完了しました
+2025-06-24 14:43:59,599 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-06-24 14:43:59,599 - INFO - X（Twitter）への投稿処理を開始します
+2025-06-24 14:43:59,631 - INFO - アフィリエイトURLのパラメータを置換しました（環境変数使用）
+2025-06-24 14:43:59,825 - INFO - 投稿に成功しました！ Tweet ID: 1937522095820243139
+2025-06-24 14:43:59,825 - INFO - 投稿内容: 三条友美のアンソロジー10が来た…！ヤバすぎるボリュームなのにってマジで神じゃん！😍 背徳感半端ない…ドキドキしすぎて心臓やばい！🔥
+
+#新刊 #PR
+https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6150362%2Fs734amlke00220%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
+2025-06-24 14:43:59,827 - INFO - 投稿履歴を保存しました
+2025-06-24 14:43:59,827 - INFO - 投稿処理が完了しました
