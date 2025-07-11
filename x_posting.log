@@ -1943,3 +1943,7 @@ https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6098613%2Fb4
 https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6144182%2Fb253atato04018%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-07-11 04:11:08,234 - INFO - 投稿履歴を保存しました
 2025-07-11 04:11:08,234 - INFO - 投稿処理が完了しました
+2025-07-11 12:20:43,646 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-07-11 12:20:43,647 - INFO - X（Twitter）への投稿処理を開始します
+2025-07-11 12:20:43,649 - WARNING - 過去7日以内に同じタイトルの投稿があります: NTR生徒会長〜彼氏じゃ満足できなくて●●●〜
+2025-07-11 12:20:43,649 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
