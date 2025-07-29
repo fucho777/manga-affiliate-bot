@@ -2377,3 +2377,7 @@ https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6163722%2Fk1
 https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6163719%2Fk178adrrn02029%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-07-28 14:39:42,702 - INFO - 投稿履歴を保存しました
 2025-07-28 14:39:42,702 - INFO - 投稿処理が完了しました
+2025-07-29 03:59:43,173 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-07-29 03:59:43,173 - INFO - X（Twitter）への投稿処理を開始します
+2025-07-29 03:59:43,175 - WARNING - 過去7日以内に同じタイトルの投稿があります: オークに屈する女たち
+2025-07-29 03:59:43,175 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
