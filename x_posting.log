@@ -2543,3 +2543,7 @@ https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6171602%2Fk1
 https://al.dmm.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6167169%2Fs641aknai14079%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-08-04 04:04:14,184 - INFO - 投稿履歴を保存しました
 2025-08-04 04:04:14,184 - INFO - 投稿処理が完了しました
+2025-08-04 12:03:08,929 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-08-04 12:03:08,929 - INFO - X（Twitter）への投稿処理を開始します
+2025-08-04 12:03:08,931 - WARNING - 過去7日以内に同じタイトルの投稿があります: 二次元コミックマガジン 悪堕ち触手服
+2025-08-04 12:03:08,932 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
