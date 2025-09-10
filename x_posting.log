@@ -3495,3 +3495,7 @@ https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F12139%2Fb1
 https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F11325%2Fb390bleed04800%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-09-10 12:02:57,455 - INFO - 投稿履歴を保存しました
 2025-09-10 12:02:57,455 - INFO - 投稿処理が完了しました
+2025-09-10 14:35:59,762 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-09-10 14:35:59,762 - INFO - X（Twitter）への投稿処理を開始します
+2025-09-10 14:35:59,765 - WARNING - 過去7日以内に同じタイトルの投稿があります: 俺の変態妄想が当たり前になっちゃった学園
+2025-09-10 14:35:59,765 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
