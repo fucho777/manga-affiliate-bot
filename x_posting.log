@@ -3597,3 +3597,7 @@ https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6199144%2F
 https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6199142%2Fk924aruuu12508%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-09-14 15:05:09,475 - INFO - 投稿履歴を保存しました
 2025-09-14 15:05:09,475 - INFO - 投稿処理が完了しました
+2025-09-14 17:05:02,657 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-09-14 17:05:02,658 - INFO - X（Twitter）への投稿処理を開始します
+2025-09-14 17:05:02,661 - WARNING - 過去7日以内に同じタイトルの投稿があります: モトカノ【デジタル特装版】【FANZA限定版】
+2025-09-14 17:05:02,661 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
