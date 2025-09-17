@@ -3665,3 +3665,7 @@ https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6184497%2F
 https://al.fanza.co.jp/?lurl=https%3A%2F%2Fbook.dmm.co.jp%2Fproduct%2F6195814%2Fk804annbn16198%2F&af_id=kntbouzu777-001&ch=toolbar&ch_id=link
 2025-09-17 03:39:16,041 - INFO - 投稿履歴を保存しました
 2025-09-17 03:39:16,041 - INFO - 投稿処理が完了しました
+2025-09-17 12:02:51,633 - INFO - すべての必須環境変数が設定されています。処理を続行します。
+2025-09-17 12:02:51,634 - INFO - X（Twitter）への投稿処理を開始します
+2025-09-17 12:02:51,637 - WARNING - 過去7日以内に同じタイトルの投稿があります: 女を支配して好き放題ヤって人生を狂わせる話
+2025-09-17 12:02:51,637 - WARNING - 過去7日以内に同じタイトルの投稿があるため、処理を中止します
